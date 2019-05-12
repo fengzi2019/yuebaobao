@@ -1,7 +1,7 @@
 <template>
   <div class="container">
     <div class="stack-wrapper">
-      <stack ref="stack" :pages="someList" :stackinit="stackinit"></stack>
+      <stack></stack>
     </div>
   </div>
 </template>
@@ -11,50 +11,12 @@
   export default {
     data () {
       return {
-        someList: [],
-        stackinit: {
-          visible: 3
-        }
       }
-    },
-    mounted () {
-      let that = this
-      setTimeout(function () {
-        that.someList = [
-          {
-            html: '<img src="https://img.xiangshengclub.com/MTU1NjM3MjY0NTYxNCMxMDAjanBn.jpg" alt="01">'
-          },
-          {
-            html: '<img src="https://img.xiangshengclub.com/MTU1NjM3MjY0NTYxNCMxMDAjanBn.jpg" alt="02">'
-          },
-          {
-            html: '<img src="https://img.xiangshengclub.com/MTU1NjM3MjY0NTYxNCMxMDAjanBn.jpg" alt="03">'
-          },
-          {
-            html: '<img src="https://img.xiangshengclub.com/MTU1NjM3MjY0NTYxNCMxMDAjanBn.jpg" alt="04">'
-          },
-          {
-            html: '<img src="https://img.xiangshengclub.com/MTU1NjM3MjY0NTYxNCMxMDAjanBn.jpg" alt="05">'
-          },
-          {
-            html: '<img src="https://img.xiangshengclub.com/MTU1NjM3MjY0NTYxNCMxMDAjanBn.jpg" alt="06">'
-          },
-          {
-            html: '<img src="https://img.xiangshengclub.com/MTU1NjM3MjY0NTYxNCMxMDAjanBn.jpg" alt="07">'
-          }
-        ]
-      }, 2000)
     },
     components: {
       stack
     },
     methods: {
-      prev () {
-        this.$refs.stack.$emit('prev')
-      },
-      next () {
-        this.$refs.stack.$emit('next')
-      }
     }
   }
 </script>

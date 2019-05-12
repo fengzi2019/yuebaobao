@@ -1,6 +1,6 @@
 <template>
   <ul class="stack">
-    <li class="stack-item" v-for="(item, index) in pages"
+    <li class="stack-item" :key="index" v-for="(item, index) in pages"
         :style="[transformIndex(index),transform(index)]"
         @touchmove.stop.capture.prevent="touchmove"
         @touchstart.stop.capture.prevent="touchstart"
@@ -12,7 +12,9 @@
         @mouseout.stop.capture.prevent="touchend"
         @webkit-transition-end="onTransitionEnd(index)"
         @transitionend="onTransitionEnd(index)">
-      <div v-html="item.html"></div>
+      <div>
+        <img :src="item.src" alt="">
+      </div>
     </li>
   </ul>
 </template>
@@ -20,16 +22,6 @@
 <script>
   import detectPrefixes from '../utils/detect-prefixes.js'
   export default {
-    props: {
-      stackinit: {
-        type: Object,
-        default: {},
-      },
-      pages: {
-        type: Array,
-        default: [],
-      }
-    },
     data () {
       return {
         basicdata: {
@@ -46,15 +38,16 @@
           lastZindex: '',
           rotate: 0,
           lastRotate: 0,
-          visible: this.stackinit.visible || 3,
+          visible: 3,
           tracking: false,
           animation: false,
-          currentPage: this.stackinit.currentPage || 0,
+          currentPage: 0,
           opacity: 1,
           lastOpacity: 0,
           swipe: false,
           zIndex: 10
-        }
+        },
+        pages: [],
       }
     },
     computed: {
@@ -76,16 +69,14 @@
       }
     },
     mounted () {
-      // 绑定事件
-      this.$on('next', () => {
-        this.next()
-      })
-      this.$on('prev', () => {
-        this.prev()
-      })
       document.addEventListener('touchmove', (e) => {
         e.preventDefault()
-      })
+      });
+      this.pages = [{
+        src: 'https://img.xiangshengclub.com/MTU1NjM3MjY0NTYxNCMxMDAjanBn.jpg'
+      }, {
+        src: 'https://img.xiangshengclub.com/MTU1NTU2NjgzMiMgNjQ=.jpg',
+      }]
     },
     methods: {
       touchstart (e) {
@@ -139,7 +130,7 @@
           this.temporaryData.rotate = rotateDirection * this.offsetWidthRatio * 15 * angleRatio
         }
       },
-      touchend (e) {
+      touchend () {
         this.temporaryData.tracking = false
         this.temporaryData.animation = true
         // 滑动结束，触发判断
@@ -188,30 +179,6 @@
           this.temporaryData.swipe = false
           this.temporaryData.lastZindex = -1
         }
-      },
-      prev () {
-        this.temporaryData.tracking = false
-        this.temporaryData.animation = true
-        // 计算划出后最终位置
-        let width = this.$el.offsetWidth
-        this.temporaryData.poswidth = -width
-        this.temporaryData.posheight = 0
-        this.temporaryData.opacity = 0
-        this.temporaryData.rotate = '-3'
-        this.temporaryData.swipe = true
-        this.nextTick()
-      },
-      next () {
-        this.temporaryData.tracking = false
-        this.temporaryData.animation = true
-        // 计算划出后最终位置
-        let width = this.$el.offsetWidth
-        this.temporaryData.poswidth = width
-        this.temporaryData.posheight = 0
-        this.temporaryData.opacity = 0
-        this.temporaryData.rotate = '3'
-        this.temporaryData.swipe = true
-        this.nextTick()
       },
       rotateDirection () {
         if (this.temporaryData.poswidth <= 0) {
