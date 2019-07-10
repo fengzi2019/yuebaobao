@@ -2,18 +2,32 @@
   <ul class="stack">
     <li class="stack-item" :key="index" v-for="(item, index) in pages"
         :style="[transformIndex(index),transform(index)]"
-        @touchmove.stop.capture.prevent="touchmove"
-        @touchstart.stop.capture.prevent="touchstart"
-        @touchend.stop.capture.prevent="touchend"
-        @touchcancel.stop.capture.prevent="touchend"
-        @mousedown.stop.capture.prevent="touchstart"
-        @mouseup.stop.capture.prevent="touchend"
-        @mousemove.stop.capture.prevent="touchmove"
-        @mouseout.stop.capture.prevent="touchend"
+        @touchmove.stop="touchmove"
+        @touchstart.stop="touchstart"
+        @touchend.stop="touchend"
+        @touchcancel.stop="touchend"
+        @mousedown.stop="touchstart"
+        @mouseup.stop="touchend"
+        @mousemove.stop="touchmove"
+        @mouseout.stop="touchend"
         @webkit-transition-end="onTransitionEnd(index)"
         @transitionend="onTransitionEnd(index)">
-      <div>
-        <img :src="item.src" alt="">
+      <div class="stack-view">
+        <div class="stack-view-info">
+          <div class="stack-view-name">{{ item.nick }}</div>
+          <div class="stack-view-address">{{ item.birth +  '/' + item.hometown }}</div>
+          <div class="stack-view-tags">
+            <span class="stack-view-tag">连麦语音</span>
+            <span class="stack-view-tag">磕泡泡</span>
+            <span class="stack-view-tag">1V1视频</span>
+          </div>
+        </div>
+        <img src="../assets/hight.png" alt="" class="stack-view-get" @click="buy">
+        <mt-swipe :auto="4000" :show-indicators="false">
+          <mt-swipe-item>
+            <div class="stack-view-img" :style="{ backgroundImage: `url(${item.portrait})` }"></div>
+          </mt-swipe-item>
+        </mt-swipe>
       </div>
     </li>
   </ul>
@@ -21,6 +35,9 @@
 
 <script>
   import detectPrefixes from '../utils/detect-prefixes.js'
+  import axios from 'axios';
+  const xId = 'ANGzyGKO49XUqQSE0cE3hIER-gzGzoHsz';
+  const xKey = 'A50NpgDb50m4G9gprPblvM3r';
   export default {
     data () {
       return {
@@ -48,6 +65,11 @@
           zIndex: 10
         },
         pages: [],
+        startN: -1,
+        endN: -1,
+        total: 0,
+        currentCount: 0,
+        stepCount: 6,
       }
     },
     computed: {
@@ -69,16 +91,56 @@
       }
     },
     mounted () {
+      this.getCount().then(() => {
+        this.getRandomHost(true);
+      });
       document.addEventListener('touchmove', (e) => {
         e.preventDefault()
       });
-      this.pages = [{
-        src: 'https://img.xiangshengclub.com/MTU1NjM3MjY0NTYxNCMxMDAjanBn.jpg'
-      }, {
-        src: 'https://img.xiangshengclub.com/MTU1NTU2NjgzMiMgNjQ=.jpg',
-      }]
     },
     methods: {
+      getHost(params) {
+        return axios({
+          url: 'https://angzygko.api.lncld.net/1.1/classes/host',
+          headers: {
+            'X-LC-Id': xId,
+            'X-LC-key': xKey,
+          },
+          params,
+        })
+      },
+      getCount() {
+        return this.getHost({
+          limit: 0,
+          count: 1,
+        }).then(({ data }) => {
+          this.total = data.count;
+        })
+      },
+      getRandomHost(init = false) {
+        const { stepCount } = this;
+        const skip = this.randomSkip();
+        this.getHost({
+          skip,
+          limit: stepCount,
+        }).then(({ data: { results } }) => {
+          this.currentCount = this.currentCount + stepCount;
+          this.pages = results;
+        });
+      },
+      randomSkip() {
+        const { startN, endN, total, stepCount } = this;
+        const n = Math.floor(Math.random() * total);
+        if ((n >= startN && n <= endN) || n >= (total - stepCount)) {
+          return this.randomSkip();
+        }
+        this.startN = n;
+        this.endN = n + stepCount;
+        return n;
+      },
+      buy() {
+        this.$emit('onBuy');
+      },
       touchstart (e) {
         if (this.temporaryData.tracking) {
           return
@@ -166,6 +228,9 @@
           this.temporaryData.opacity = 1
           this.temporaryData.rotate = 0
         })
+        if (this.temporaryData.currentPage === 0) {
+          this.getRandomHost();
+        }
       },
       onTransitionEnd (index) {
         let lastPage = this.temporaryData.currentPage === 0 ? this.pages.length - 1 : this.temporaryData.currentPage - 1
@@ -256,6 +321,18 @@
 </script>
 
 <style>
+  @keyframes scale {
+    0% {
+      transform: scale(1);
+    }
+    50% {
+      transform: scale(.9);
+    }
+    100% {
+      transform: scale(1);
+    }
+  }
+
   .stack {
     width: 100%;
     height: 100%;
@@ -274,7 +351,6 @@
     height: 100%;
     width: 100%;
     border-radius: 4px;
-    text-align: center;
     overflow: hidden;
     position: absolute;
     opacity: 0;
@@ -291,11 +367,65 @@
     pointer-events: auto;
   }
 
-  .stack-item img {
+  .stack-view {
+    height: 80vh;
+  }
+
+  .stack-view-img {
     width: 100%;
     height: 100%;
+    background-size: cover;
+    background-repeat: no-repeat;
     display: block;
     pointer-events: none;
+  }
+
+  .stack-view-get {
+    position: absolute;
+    bottom: 100px;
+    right: 10px;
+    width: 60px;
+    height: 60px;
+    z-index: 100;
+    border-radius: 50%;
+    transform-origin: center;
+    animation: scale .6s ease-in-out infinite;
+  }
+
+  .stack-view-info {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 100;
+    padding: 40px 20px 20px;
+    color: #fff;
+    background: linear-gradient(0deg, rgba(0, 0, 0, .5) 30%, rgba(0, 0, 0, 0) 100%);
+  }
+
+  .stack-view-address,
+  .stack-view-name {
+    padding-bottom: 10px;
+    font-size: 16px;
+    font-weight: bold;
+    max-width: 70%;
+  }
+
+  .stack-view-tag {
+    margin-right: 4px;
+    padding: 4px 14px;
+    border-radius: 8px;
+    font-size: 14px;
+  }
+
+  .stack-view-tag:nth-of-type(1) {
+    background: linear-gradient(135deg, #ff5c65 30%, #fe496f 100%);
+  }
+  .stack-view-tag:nth-of-type(2) {
+    background: linear-gradient(135deg, #a946e7 30%, #933ddf 100%);
+  }
+  .stack-view-tag:nth-of-type(3) {
+    background: linear-gradient(135deg, #1499fb 30%, #0b83fb 100%);
   }
 
   .stack-container li.move-back {
